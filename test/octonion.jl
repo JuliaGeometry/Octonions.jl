@@ -1,5 +1,5 @@
-using Quaternions
 using LinearAlgebra
+using Octonions
 using Random
 using Test
 
