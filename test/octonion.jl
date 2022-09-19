@@ -1,5 +1,6 @@
-using Quaternions
 using LinearAlgebra
+using Octonions
+using Quaternions: Quaternion, QuaternionF64
 using Random
 using Test
 
@@ -168,7 +169,7 @@ using Test
         qnorm = normalize(q)
         @test real(q) === q.s
         @test_throws MethodError imag(q)
-        @test @test_deprecated(Quaternions.imag(q)) == [q.v1, q.v2, q.v3, q.v4, q.v5, q.v6, q.v7]
+        @test @test_deprecated(Octonions.imag(q)) == [q.v1, q.v2, q.v3, q.v4, q.v5, q.v6, q.v7]
         @test imag_part(q) === (q.v1, q.v2, q.v3, q.v4, q.v5, q.v6, q.v7)
         @test conj(q) ===
             Octonion(q.s, -q.v1, -q.v2, -q.v3, -q.v4, -q.v5, -q.v6, -q.v7, q.norm)
@@ -186,7 +187,7 @@ using Test
         @test conj(conj(q)) === q
         @test conj(conj(qnorm)) === qnorm
         @test float(Octonion(1:8...)) === Octonion(1.0:8.0...)
-        @test Quaternions.abs_imag(q) ==
+        @test Octonions.abs_imag(q) ==
             abs(Octonion(0, q.v1, q.v2, q.v3, q.v4, q.v5, q.v6, q.v7))
     end
 

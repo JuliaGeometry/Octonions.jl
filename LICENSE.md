@@ -1,6 +1,7 @@
 MIT License
 
 Copyright (c) 2013 Forio and [Quaternions.jl contributors](https://github.com/JuliaGeometry/Quaternions.jl/graphs/contributors)
+Copyright (c) 2022 Seth Axen <seth@sethaxen.com> and Yuto Horikawa <hyrodium@gmail.com> and [Octonions.jl contributors](https://github.com/JuliaGeometry/Octonions.jl/graphs/contributors)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in

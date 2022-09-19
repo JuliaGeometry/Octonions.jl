@@ -1,7 +1,7 @@
 using Test
-using Quaternions
+using Octonions
 
-include("helpers.jl")
-include("Quaternion.jl")
-include("Octonion.jl")
-include("DualQuaternion.jl")
+@testset "Octonions.jl" begin
+    include("helpers.jl")
+    include("octonion.jl")
+end
