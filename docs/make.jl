@@ -5,7 +5,7 @@ DocMeta.setdocmeta!(Octonions, :DocTestSetup, :(using Octonions); recursive=true
 
 makedocs(;
     modules=[Octonions],
-    authors="Seth Axen <seth@sethaxen.com> and contributors",
+    authors="Seth Axen <seth@sethaxen.com> and Yuto Horikawa <hyrodium@gmail.com> and contributors",
     repo="https://github.com/JuliaGeometry/Octonions.jl/blob/{commit}{path}#{line}",
     sitename="Octonions.jl",
     format=Documenter.HTML(;
