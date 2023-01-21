@@ -4,15 +4,15 @@ version = "0.1.0"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-Quaternions = "94ee1d12-ae83-5a48-8b1c-48b8ff168ae0"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [compat]
-Quaternions = "0.5.6"
+Quaternions = "0.7"
 julia = "1"
 
 [extras]
+Quaternions = "94ee1d12-ae83-5a48-8b1c-48b8ff168ae0"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["Quaternions", "Test"]
