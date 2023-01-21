@@ -152,7 +152,7 @@ using Test
 
     @testset "basic" begin
         q = randn(OctonionF64)
-        qnorm = normalize(q)
+        qnorm = sign(q)
         @test real(q) === q.s
         @test_throws MethodError imag(q)
         @test @test_deprecated(Octonions.imag(q)) == [q.v1, q.v2, q.v3, q.v4, q.v5, q.v6, q.v7]
@@ -462,29 +462,14 @@ using Test
         end
     end
 
-    @testset "normalize" begin
+    @testset "sign" begin
         for _ in 1:100
             q = randn(OctonionF64)
-            qnorm = @inferred normalize(q)
+            qnorm = @inferred sign(q)
             @test abs(qnorm) ≈ 1
             @test q ≈ abs(q) * qnorm
-            @test normalize(qnorm) ≈ qnorm
+            @test sign(qnorm) ≈ qnorm
         end
-        @test_broken @inferred(normalize(octo(1:8...)))
-    end
-
-    @testset "normalizea" begin
-        for _ in 1:100
-            q = randn(OctonionF64)
-            qnorm, a = @inferred normalizea(q)
-            @test abs(qnorm) ≈ 1
-            @test a isa Real
-            @test a ≈ abs(q)
-            @test q ≈ a * qnorm
-            qnorm2, a2 = normalizea(qnorm)
-            @test qnorm2 ≈ qnorm
-            @test a2 ≈ 1
-        end
-        @test_broken @inferred(normalizea(octo(1:8...)))
+        @inferred(sign(octo(1:8...)))
     end
 end

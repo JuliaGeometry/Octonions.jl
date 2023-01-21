@@ -57,17 +57,6 @@ iszero(o::Octonion) = iszero(real(o)) & iszero(o.v1) & iszero(o.v2) & iszero(o.v
 isnan(o::Octonion) = isnan(real(o)) | isnan(o.v1) | isnan(o.v2) | isnan(o.v3) | isnan(o.v4) | isnan(o.v5) | isnan(o.v6) | isnan(o.v7)
 isinf(o::Octonion) = isinf(real(o)) | isinf(o.v1) | isinf(o.v2) | isinf(o.v3) | isinf(o.v4) | isinf(o.v5) | isinf(o.v6) | isinf(o.v7)
 
-function normalize(o::Octonion)
-  o = o / abs(o)
-  Octonion(o.s, o.v1, o.v2, o.v3, o.v4, o.v5, o.v6, o.v7)
-end
-
-function normalizea(o::Octonion)
-  a = abs(o)
-  o = o / a
-  (Octonion(o.s, o.v1, o.v2, o.v3, o.v4, o.v5, o.v6, o.v7), a)
-end
-
 (-)(o::Octonion) = Octonion(-o.s, -o.v1, -o.v2, -o.v3, -o.v4, -o.v5, -o.v6, -o.v7)
 
 (+)(o::Octonion, w::Octonion) = Octonion(o.s + w.s,
@@ -124,7 +113,8 @@ function exp(o::Octonion)
 end
 
 function log(o::Octonion)
-  o, a = normalizea(o)
+  a = abs(o)
+  o = o / a
   s = o.s
   M = abs_imag(o)
   th = atan(M, s)
