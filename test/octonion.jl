@@ -14,23 +14,19 @@ using Test
     @testset "Constructors" begin
         @testset "from coefficients" begin
             cs = [(1, 2.0, 3.0f0, 4//1, 5, 6, 7, 8), (1//1, 2.0f0, 3.0f0, 4, 5, 6, 7, 8)]
-            @testset for coef in cs, T in (Float32, Float64, Int), norm in (true, false)
-                q = @inferred Octonion{T}(coef..., norm)
+            @testset for coef in cs, T in (Float32, Float64, Int)
+                q = @inferred Octonion{T}(coef...)
                 @test q isa Octonion{T}
-                @test q.norm === norm
-                @test q === Octonion{T}(convert.(T, coef)..., norm)
-                q2 = @inferred Octonion(convert.(T, coef)..., norm)
-                @test Octonion(convert.(T, coef)..., norm) === q
-                if !norm
-                    @test Octonion(convert.(T, coef)...) === q
-                end
+                @test q === Octonion{T}(convert.(T, coef)...)
+                q2 = @inferred Octonion(convert.(T, coef)...)
+                @test Octonion(convert.(T, coef)...) === q
             end
         end
         @testset "from real" begin
             @testset for x in (-1//1, 1.0, 2.0), T in (Float32, Float64, Int, Rational{Int})
                 coef = T.((x, zeros(7)...))
-                @test @inferred(Octonion{T}(x)) === Octonion{T}(coef..., isone(abs(x)))
-                @test @inferred(Octonion(T(x))) === Octonion{T}(coef..., isone(abs(x)))
+                @test @inferred(Octonion{T}(x)) === Octonion{T}(coef...)
+                @test @inferred(Octonion(T(x))) === Octonion{T}(coef...)
             end
         end
         @testset "from complex" begin
@@ -39,27 +35,26 @@ using Test
 
                 coef = T.((reim(z)..., zeros(6)...))
                 z2 = Complex{T}(z)
-                norm = isone(abs(z))
-                @test Octonion{T}(z) === Octonion{T}(coef..., norm)
-                @test @inferred(Octonion(z2)) === Octonion{T}(coef..., norm)
+                @test Octonion{T}(z) === Octonion{T}(coef...)
+                @test @inferred(Octonion(z2)) === Octonion{T}(coef...)
             end
         end
         @testset "from quaternion" begin
-            qs = (Quaternion(1, 2, 3, 4), QuaternionF64(0, 1, 0, 0, true))
+            qs = (Quaternion(1, 2, 3, 4), QuaternionF64(0, 1, 0, 0))
             @testset for q in qs, T in (Float32, Float64)
                 coef = T.((q.s, q.v1, q.v2, q.v3, zeros(4)...))
                 q2 = Quaternion{T}(q)
-                @test @inferred(Octonion{T}(q)) === Octonion{T}(coef..., q.norm)
-                @test @inferred(Octonion(q2)) === Octonion{T}(coef..., q.norm)
+                @test @inferred(Octonion{T}(q)) === Octonion{T}(coef...)
+                @test @inferred(Octonion(q2)) === Octonion{T}(coef...)
             end
         end
         @testset "from octonion" begin
             os = (
-                Octonion(1, 2, 3, 4, 5, 6, 7, 8), OctonionF64(0, 1, 0, 0, 0, 0, 0, 0, true)
+                Octonion(1, 2, 3, 4, 5, 6, 7, 8), OctonionF64(0, 1, 0, 0, 0, 0, 0, 0)
             )
             @testset for o in os, T in (Float32, Float64)
                 coef = T.((o.s, o.v1, o.v2, o.v3, o.v4, o.v5, o.v6, o.v7))
-                @test @inferred(Octonion{T}(o)) === Octonion{T}(coef..., o.norm)
+                @test @inferred(Octonion{T}(o)) === Octonion{T}(coef...)
                 @test @inferred(Octonion(o)) === o
             end
         end
@@ -74,8 +69,6 @@ using Test
     @testset "==" begin
         @test Octonion(1.0, 2, 3, 4, 5, 6, 7, 8) == Octonion(1, 2, 3, 4, 5, 6, 7, 8)
         @test Octonion(1.0, 2, 3, 4, 5, 6, 7, 8) != Octonion(1, 2, 3, 4, 1, 2, 3, 4)
-        @test Octonion(1, 0, 0, 0, 0, 0, 0, 0, false) ==
-            Octonion(1, 0, 0, 0, 0, 0, 0, 0, true) # test that .norm field does not affect equality
     end
 
     @testset "convert" begin
@@ -84,12 +77,12 @@ using Test
             Octonion(1.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
         @test convert(Octonion{Float64}, Quaternion(1, 2, 3, 4)) ===
             Octonion(1.0, 2.0, 3.0, 4.0, 0.0, 0.0, 0.0, 0.0)
-        @test convert(Octonion{Float64}, Quaternion(0, 1, 0, 0, true)) ===
-            Octonion(0.0, 1.0, 0.0, 0.0, 0, 0, 0, 0, true)
+        @test convert(Octonion{Float64}, Quaternion(0, 1, 0, 0)) ===
+            Octonion(0.0, 1.0, 0.0, 0.0, 0, 0, 0, 0)
         @test convert(Octonion{Float64}, Octonion(1, 2, 3, 4, 5, 6, 7, 8)) ===
             Octonion(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0)
-        @test convert(Octonion{Float64}, Octonion(0, 0, 0, 0, 1, 0, 0, 0, true)) ===
-            Octonion(0.0, 0.0, 0.0, 0.0, 1, 0, 0, 0, true)
+        @test convert(Octonion{Float64}, Octonion(0, 0, 0, 0, 1, 0, 0, 0)) ===
+            Octonion(0.0, 0.0, 0.0, 0.0, 1, 0, 0, 0)
     end
 
     @testset "promote" begin
@@ -109,13 +102,9 @@ using Test
     end
 
     @testset "shorthands" begin
-        @test octo(1) === Octonion(1) # checking the .norm field in particular
-        @test octo(1, 0, 0, 0, 0, 0, 0, 0) === Octonion(1, 0, 0, 0, 0, 0, 0, 0) # checking the .norm field in particular
+        @test octo(1) === Octonion(1)
         @test octo(1, 2, 3, 4, 5, 6, 7, 8) === Octonion(1, 2, 3, 4, 5, 6, 7, 8)
-        @test octo(Octonion(1, 0, 0, 0, 0, 0, 0, 0)) === Octonion(1, 0, 0, 0, 0, 0, 0, 0) # checking the .norm field in particular
         @test octo(Octonion(1, 2, 3, 4, 5, 6, 7, 8)) === Octonion(1, 2, 3, 4, 5, 6, 7, 8)
-        @test octo(1, 0, 0, 0, 0, 0, 0, 0, false).norm == false # respect the .norm input (even if wrong)
-        @test octo(1, 2, 3, 4, 5, 6, 7, 8, true).norm == true # respect the .norm input (even if wrong)
         @test octo(1, collect(2:8)) === Octonion(1:8...)
         @test octo(collect(2:8)) === Octonion(0, 2:8...)
     end
@@ -124,14 +113,12 @@ using Test
         @testset "octorand" begin
             o = octorand()
             @test o isa Octonion
-            @test !o.norm
         end
 
         @testset "rand($H)" for H in (OctonionF32, OctonionF64)
             rng = Random.MersenneTwister(42)
             o = rand(rng, H)
             @test o isa H
-            @test !o.norm
 
             os = rand(rng, H, 1000)
             @test eltype(os) === H
@@ -149,7 +136,6 @@ using Test
             rng = Random.MersenneTwister(42)
             o = randn(rng, H)
             @test o isa H
-            @test !o.norm
 
             os = randn(rng, H, 10000)
             @test eltype(os) === H
@@ -172,7 +158,7 @@ using Test
         @test @test_deprecated(Octonions.imag(q)) == [q.v1, q.v2, q.v3, q.v4, q.v5, q.v6, q.v7]
         @test imag_part(q) === (q.v1, q.v2, q.v3, q.v4, q.v5, q.v6, q.v7)
         @test conj(q) ===
-            Octonion(q.s, -q.v1, -q.v2, -q.v3, -q.v4, -q.v5, -q.v6, -q.v7, q.norm)
+            Octonion(q.s, -q.v1, -q.v2, -q.v3, -q.v4, -q.v5, -q.v6, -q.v7)
         @test conj(qnorm) === Octonion(
             qnorm.s,
             -qnorm.v1,
@@ -182,7 +168,6 @@ using Test
             -qnorm.v5,
             -qnorm.v6,
             -qnorm.v7,
-            qnorm.norm,
         )
         @test conj(conj(q)) === q
         @test conj(conj(qnorm)) === qnorm
@@ -235,7 +220,6 @@ using Test
         @test !iszero(octo(0, 0, 0, 0, 0, 1, 0, 0))
         @test !iszero(octo(0, 0, 0, 0, 0, 0, 1, 0))
         @test !iszero(octo(0, 0, 0, 0, 0, 0, 0, 1))
-        @test !iszero(octo(0, 0, 0, 0, 0, 0, 0, 0, true))
     end
 
     @testset "isone" begin
@@ -262,7 +246,6 @@ using Test
             @test !isfinite(octo(0, 0, 0, 0, 0, val, 0, 0))
             @test !isfinite(octo(0, 0, 0, 0, 0, 0, val, 0))
             @test !isfinite(octo(0, 0, 0, 0, 0, 0, 0, val))
-            @test isfinite(octo(fill(val, 8)..., true))
         end
     end
 
@@ -278,7 +261,6 @@ using Test
             @test isinf(octo(0, 0, 0, 0, 0, inf, 0, 0))
             @test isinf(octo(0, 0, 0, 0, 0, 0, inf, 0))
             @test isinf(octo(0, 0, 0, 0, 0, 0, 0, inf))
-            @test !isinf(octo(fill(inf, 8)..., true))
         end
     end
 
@@ -485,9 +467,8 @@ using Test
             q = randn(OctonionF64)
             qnorm = @inferred normalize(q)
             @test abs(qnorm) ≈ 1
-            @test qnorm.norm
             @test q ≈ abs(q) * qnorm
-            @test normalize(qnorm) === qnorm
+            @test normalize(qnorm) ≈ qnorm
         end
         @test_broken @inferred(normalize(octo(1:8...)))
     end
@@ -497,11 +478,12 @@ using Test
             q = randn(OctonionF64)
             qnorm, a = @inferred normalizea(q)
             @test abs(qnorm) ≈ 1
-            @test qnorm.norm
             @test a isa Real
             @test a ≈ abs(q)
             @test q ≈ a * qnorm
-            @test normalizea(qnorm) === (qnorm, one(real(q)))
+            qnorm2, a2 = normalizea(qnorm)
+            @test qnorm2 ≈ qnorm
+            @test a2 ≈ 1
         end
         @test_broken @inferred(normalizea(octo(1:8...)))
     end
