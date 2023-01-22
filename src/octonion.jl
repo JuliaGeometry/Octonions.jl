@@ -16,8 +16,6 @@ Octonion{T}(o::Octonion) where {T<:Real} =
 Octonion(s::Real, v1::Real, v2::Real, v3::Real, v4::Real, v5::Real, v6::Real, v7::Real) =
   Octonion(promote(s, v1, v2, v3, v4, v5, v6, v7)...)
 Octonion(x::Real) = Octonion(x, zero(x), zero(x), zero(x), zero(x), zero(x), zero(x), zero(x))
-Octonion(s::Real, a::Vector) = Octonion(s, a[1], a[2], a[3], a[4], a[5], a[6], a[7])
-Octonion(a::Vector) = Octonion(0, a[1], a[2], a[3], a[4], a[5], a[6], a[7])
 
 const OctonionF16 = Octonion{Float16}
 const OctonionF32 = Octonion{Float32}
@@ -28,7 +26,6 @@ promote_rule(::Type{Octonion{T}}, ::Type{Octonion{S}}) where {T <: Real, S <: Re
 
 octo(p, v1, v2, v3, v4, v5, v6, v7) = Octonion(p, v1, v2, v3, v4, v5, v6, v7)
 octo(x) = Octonion(x)
-octo(s, a) = Octonion(s, a)
 
 real(o::Octonion) = o.s
 imag_part(o::Octonion) = (o.v1, o.v2, o.v3, o.v4, o.v5, o.v6, o.v7)
