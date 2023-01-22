@@ -53,12 +53,6 @@ end
                 @test @inferred(Octonion(o)) === o
             end
         end
-        @testset "from vector" begin
-            s = randn()
-            v = randn(7)
-            @test @inferred(Octonion(s, v)) === Octonion(s, v...)
-            @test @inferred(Octonion(v)) === Octonion(0, v)
-        end
     end
 
     @testset "==" begin
@@ -93,8 +87,6 @@ end
         @test octo(Octonion(1, 2, 3, 4, 5, 6, 7, 8)) === Octonion(1, 2, 3, 4, 5, 6, 7, 8)
         @test octo(1, 0, 0, 0, 0, 0, 0, 0, false).norm == false # respect the .norm input (even if wrong)
         @test octo(1, 2, 3, 4, 5, 6, 7, 8, true).norm == true # respect the .norm input (even if wrong)
-        @test octo(1, collect(2:8)) === Octonion(1:8...)
-        @test octo(collect(2:8)) === Octonion(0, 2:8...)
     end
 
     @testset "random generation" begin
