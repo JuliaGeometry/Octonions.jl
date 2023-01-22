@@ -10,16 +10,12 @@ struct Octonion{T<:Real} <: Number
 end
 
 Octonion{T}(x::Real) where {T<:Real} = Octonion(convert(T, x))
-Octonion{T}(x::Complex) where {T<:Real} = Octonion(convert(Complex{T}, x))
-Octonion{T}(q::Quaternion) where {T<:Real} = Octonion(convert(Quaternion{T}, q))
 Octonion{T}(o::Octonion) where {T<:Real} =
   Octonion{T}(o.s, o.v1, o.v2, o.v3, o.v4, o.v5, o.v6, o.v7)
 
 Octonion(s::Real, v1::Real, v2::Real, v3::Real, v4::Real, v5::Real, v6::Real, v7::Real) =
   Octonion(promote(s, v1, v2, v3, v4, v5, v6, v7)...)
 Octonion(x::Real) = Octonion(x, zero(x), zero(x), zero(x), zero(x), zero(x), zero(x), zero(x))
-Octonion(z::Complex) = Octonion(z.re, z.im, zero(z.re), zero(z.re), zero(z.re), zero(z.re), zero(z.re), zero(z.re))
-Octonion(q::Quaternion) = Octonion(q.s, q.v1, q.v2, q.v3, zero(q.s), zero(q.s), zero(q.s), zero(q.s))
 Octonion(s::Real, a::Vector) = Octonion(s, a[1], a[2], a[3], a[4], a[5], a[6], a[7])
 Octonion(a::Vector) = Octonion(0, a[1], a[2], a[3], a[4], a[5], a[6], a[7])
 
@@ -28,8 +24,6 @@ const OctonionF32 = Octonion{Float32}
 const OctonionF64 = Octonion{Float64}
 
 promote_rule(::Type{Octonion{T}}, ::Type{S}) where {T <: Real, S <: Real} = Octonion{promote_type(T, S)}
-promote_rule(::Type{Octonion{T}}, ::Type{Complex{S}}) where {T <: Real, S <: Real} = Octonion{promote_type(T, S)}
-promote_rule(::Type{Octonion{T}}, ::Type{Quaternion{S}}) where {T <: Real, S <: Real} = Octonion{promote_type(T, S)}
 promote_rule(::Type{Octonion{T}}, ::Type{Octonion{S}}) where {T <: Real, S <: Real} = Octonion{promote_type(T, S)}
 
 octo(p, v1, v2, v3, v4, v5, v6, v7) = Octonion(p, v1, v2, v3, v4, v5, v6, v7)
@@ -129,7 +123,8 @@ function log(o::Octonion)
                      o.v6 * M,
                      o.v7 * M)
   else
-    return Octonion(complex(log(a), ifelse(iszero(a), zero(th), th)))
+    z = zero(th)
+    return Octonion(log(a), ifelse(iszero(a), z, th), z, z, z, z, z, z)
   end
 end
 
