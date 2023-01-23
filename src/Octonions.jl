@@ -1,9 +1,5 @@
 module Octonions
 
-import Base: +, -, *, /, ^, ==
-import Base: abs, abs2, conj, exp, inv, isreal, isfinite, isinf, iszero, isnan, log, real, sqrt
-import Base: promote_rule, float
-import Base: rand, randn
 using Random
 using RealDot: RealDot
 
