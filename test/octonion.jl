@@ -2,6 +2,7 @@ using LinearAlgebra
 using Octonions
 using Quaternions: Quaternions, Quaternion, QuaternionF64
 using Random
+using RealDot: realdot
 using Test
 
 _octo(a::Real) = octo(a)
@@ -439,5 +440,20 @@ end
             @test sign(qnorm) ≈ qnorm
         end
         @inferred(sign(octo(1:8...)))
+    end
+
+    @testset "RealDot with $T" for T in (Float32, Float64)
+        for _ in 1:10
+            q1 = randn(Octonion{T})
+            q2 = randn(Octonion{T})
+            # Check real∘dot is equal to realdot.
+            @test real(dot(q1,q2)) == @inferred(realdot(q1,q2))
+            # Check realdot is commutative.
+            @test realdot(q1,q2) == realdot(q2,q1)
+            # Check real∘dot is also commutative just in case.
+            @test real(dot(q1,q2)) == real(dot(q2,q1))
+            # Check the return type of realdot is correct.
+            @test realdot(q1,q2) isa T
+        end
     end
 end

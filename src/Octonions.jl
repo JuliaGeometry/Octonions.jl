@@ -5,6 +5,7 @@ import Base: abs, abs2, conj, exp, inv, isreal, isfinite, isinf, iszero, isnan, 
 import Base: promote_rule, float
 import Base: rand, randn
 using Random
+using RealDot: RealDot
 
 Base.@irrational INV_SQRT_EIGHT 0.3535533905932737622004 sqrt(big(0.125))
 

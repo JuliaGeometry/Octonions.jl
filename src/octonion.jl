@@ -38,8 +38,8 @@ conj(o::Octonion) = Octonion(o.s, -o.v1, -o.v2, -o.v3, -o.v4, -o.v5, -o.v6, -o.v
 abs(o::Octonion) = sqrt(abs2(o))
 float(q::Octonion{T}) where T = convert(Octonion{float(T)}, q)
 abs_imag(o::Octonion) = sqrt((o.v4 * o.v4 + (o.v2 * o.v2 + o.v6 * o.v6)) + ((o.v1 * o.v1 + o.v5 * o.v5) + (o.v3 * o.v3 + o.v7 * o.v7))) # ordered to match abs2
-abs2(o::Octonion) = ((o.s * o.s + o.v4 * o.v4) + (o.v2 * o.v2 + o.v6 * o.v6)) + ((o.v1 * o.v1  + o.v5 * o.v5) + (o.v3 * o.v3 + o.v7 * o.v7))
 inv(o::Octonion) = conj(o) / abs2(o)
+abs2(o::Octonion) = RealDot.realdot(o, o)
 
 isreal(o::Octonion) = iszero(o.v1) & iszero(o.v2) & iszero(o.v3) & iszero(o.v4) & iszero(o.v5) & iszero(o.v6) & iszero(o.v7)
 isfinite(o::Octonion) = isfinite(real(o)) & isfinite(o.v1) & isfinite(o.v2) & isfinite(o.v3) & isfinite(o.v4) & isfinite(o.v5) & isfinite(o.v6) & isfinite(o.v7)
@@ -148,4 +148,9 @@ function randn(rng::AbstractRNG, ::Type{Octonion{T}}) where {T<:AbstractFloat}
       randn(rng, T) * INV_SQRT_EIGHT,
       randn(rng, T) * INV_SQRT_EIGHT,
   )
+end
+
+function RealDot.realdot(o::Octonion, w::Octonion)
+    return ((o.s * w.s + o.v4 * w.v4) + (o.v2 * w.v2 + o.v6 * w.v6)) +
+           ((o.v1 * w.v1 + o.v5 * w.v5) + (o.v3 * w.v3 + o.v7 * w.v7))
 end
