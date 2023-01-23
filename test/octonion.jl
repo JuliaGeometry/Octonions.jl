@@ -57,6 +57,21 @@ end
         @test Octonion(1.0, 2, 3, 4, 5, 6, 7, 8) != Octonion(1, 2, 3, 4, 1, 2, 3, 4)
     end
 
+    @testset "isequal" begin
+        @test isequal(Octonion(1:8...), Octonion(1.0:8.0...))
+        x = ntuple(identity, 8)
+        o = Octonion(x...)
+        for i in 1:8
+            x2 = Base.setindex(x, 0, i)
+            o2 = Octonion(x2...)
+            @test !isequal(o, o2)
+        end
+        o = Octonion(NaN, -0.0, Inf, -Inf, 0.0, NaN, Inf, -Inf)
+        @test isequal(o, o)
+        @test !isequal(o, Octonion(NaN, 0.0, Inf, -Inf, 0.0, NaN, Inf, -Inf))
+        @test !isequal(o, Octonion(NaN, -0.0, Inf, -Inf, -0.0, NaN, Inf, -Inf))
+    end
+
     @testset "convert" begin
         @test convert(Octonion{Float64}, 1) === Octonion(1.0)
         @test convert(Octonion{Float64}, Octonion(1, 2, 3, 4, 5, 6, 7, 8)) ===
@@ -142,8 +157,31 @@ end
         @test conj(conj(q)) === q
         @test conj(conj(qnorm)) === qnorm
         @test float(Octonion(1:8...)) === Octonion(1.0:8.0...)
-        @test Octonions.abs_imag(q) ==
+        @test Octonions.abs_imag(q) ≈
             abs(Octonion(0, q.v1, q.v2, q.v3, q.v4, q.v5, q.v6, q.v7))
+    end
+
+    @testset "abs/abs_imag don't over/underflow" begin
+        for x in [1e-300, 1e300, -1e-300, -1e300]
+            for i in 1:8
+                z = Base.setindex(ntuple(zero, 8), x, i)
+                o = octo(z...)
+                @test abs(o) == abs(x)
+                i == 1 || @test Octonions.abs_imag(o) == abs(x)
+            end
+        end
+        @test isnan(abs(octo(fill(NaN, 8)...)))
+        @test abs(octo(NaN, Inf, fill(NaN, 6)...)) == Inf
+        @test abs(octo(-Inf, fill(NaN, 7)...)) == Inf
+        @test abs(octo(0.0)) == 0.0
+        @test abs(octo(Inf)) == Inf
+        @test abs(octo(1, -Inf, 3:8...)) == Inf
+        @test isnan(Octonions.abs_imag(octo(0, fill(NaN, 7)...)))
+        @test Octonions.abs_imag(octo(0, Inf, fill(NaN, 6)...)) == Inf
+        @test Octonions.abs_imag(octo(0, NaN, -Inf, fill(NaN, 5)...)) == Inf
+        @test Octonions.abs_imag(octo(0.0)) == 0.0
+        @test Octonions.abs_imag(octo(0.0, 0.0, Inf, fill(0, 5)...)) == Inf
+        @test Octonions.abs_imag(octo(0, 1, -Inf, 3:7...)) == Inf
     end
 
     @testset "algebraic properties" begin
@@ -167,6 +205,25 @@ end
             test_multiplicative(c1, c2, *, _octo)
             test_multiplicative(c1, c2, +, _octo)
         end
+    end
+
+    @testset "inv does not under/overflow" begin
+        x = 1e-300
+        y = inv(x)
+        for i in 1:8
+            z = zeros(8)
+            z[i] = x
+            z2 = vcat(0.0, fill(-0.0, 7))
+            z2[i] = i == 1 ? y : -y
+            o = octo(z...)
+            @test inv(octo(z...)) == octo(z2...)
+
+            z[i] = y
+            z2[i] = i == 1 ? x : -x
+            @test inv(octo(z...)) == octo(z2...)
+        end
+        @test isequal(inv(octo(-Inf, 1, -2, 3, -4, 5, -6, 7)), octo(-0.0, -0.0, 0.0, -0.0, 0.0, -0.0, 0.0, -0.0))
+        @test isequal(inv(octo(1, -2, Inf, 3, -4, 5, -6, 7)), octo(0.0, 0.0, -0.0, -0.0, 0.0, -0.0, 0.0, -0.0))
     end
 
     @testset "isreal" begin
@@ -360,6 +417,35 @@ end
             @test o / o2 ≈ o * inv(o2)
             @test o2 \ o ≈ inv(o2) * o
             @test o / x ≈ x \ o ≈ inv(x) * o
+        end
+
+        @testset "no overflow/underflow" begin
+            @testset for x in [1e-300, 1e300, -1e-300, -1e300]
+                @test octo(x) / octo(x) == octo(1)
+                @testset for i in 2:8
+                    z = Base.setindex(ntuple(zero, 8), x, i)
+                    z2 = Base.setindex(ntuple(zero, 7), -1, i - 1)
+                    @test octo(x) / octo(z...) == octo(0, z2...)
+                end
+                @test octo(0, x, zeros(6)...) / octo(x, 0, 0, 0, zeros(4)...) == octo(0, 1, 0, 0, zeros(4)...)
+                @test octo(0, x, zeros(6)...) / octo(0, x, 0, 0, zeros(4)...) == octo(1, 0, 0, 0, zeros(4)...)
+                @test octo(0, x, zeros(6)...) / octo(0, 0, x, 0, zeros(4)...) == octo(0, 0, 0, -1, zeros(4)...)
+                @test octo(0, x, zeros(6)...) / octo(0, 0, 0, x, zeros(4)...) == octo(0, 0, 1, 0, zeros(4)...)
+            end
+            @testset for T in [Float32, Float64]
+                o = one(T)
+                z = zero(T)
+                inf = T(Inf)
+                nan = T(NaN)
+                @testset for s in [1, -1], t in [1, -1]
+                    @test isequal(octo(o) / octo(s*inf), octo(s*z, fill(-z, 7)...))
+                    @test isequal(octo(o) / octo(s*inf, t*o, z, t*z, z, t*z, z, t*z), octo(s*z, -t*z, -z, -t*z, -z, -t*z, -z, -t*z))
+                    @test isequal(octo(o) / octo(s*inf, t*nan, t*z, z, t*z, z, t*z, z), octo(s*z, nan, -t*z, -z, -t*z, -z, -t*z, -z))
+                    @test isequal(octo(o) / octo(s*inf, t*inf, t*z, z, t*z, z, t*z, z), octo(s*z, -t*z, -t*z, -z, -t*z, -z, -t*z, -z))
+                end
+                @test isequal(octo(inf) / octo(inf, 1:7...), octo(fill(nan, 8)...))
+                @test isequal(octo(inf) / octo(inf, 1, 2, -inf, 4:7...), octo(fill(nan, 8)...))
+            end
         end
     end
 

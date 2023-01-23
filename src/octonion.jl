@@ -35,11 +35,28 @@ imag_part(o::Octonion) = (o.v1, o.v2, o.v3, o.v4, o.v5, o.v6, o.v7)
 (*)(x::Real, o::Octonion) = o * x
 
 conj(o::Octonion) = Octonion(o.s, -o.v1, -o.v2, -o.v3, -o.v4, -o.v5, -o.v6, -o.v7)
-abs(o::Octonion) = sqrt(abs2(o))
+abs(o::Octonion) = hypot(o.s, o.v1, o.v2, o.v3, o.v4, o.v5, o.v6, o.v7)
 float(q::Octonion{T}) where T = convert(Octonion{float(T)}, q)
-abs_imag(o::Octonion) = sqrt((o.v4 * o.v4 + (o.v2 * o.v2 + o.v6 * o.v6)) + ((o.v1 * o.v1 + o.v5 * o.v5) + (o.v3 * o.v3 + o.v7 * o.v7))) # ordered to match abs2
-inv(o::Octonion) = conj(o) / abs2(o)
+abs_imag(o::Octonion) = hypot(o.v1, o.v2, o.v3, o.v4, o.v5, o.v6, o.v7)
 abs2(o::Octonion) = RealDot.realdot(o, o)
+function inv(o::Octonion)
+    if isinf(o)
+        return octo(
+            copysign(zero(o.s), o.s),
+            flipsign(-zero(o.v1), o.v1),
+            flipsign(-zero(o.v2), o.v2),
+            flipsign(-zero(o.v3), o.v3),
+            flipsign(-zero(o.v4), o.v4),
+            flipsign(-zero(o.v5), o.v5),
+            flipsign(-zero(o.v6), o.v6),
+            flipsign(-zero(o.v7), o.v7),
+        )
+    end
+    a = max(abs(o.s), maximum(abs, imag_part(o)))
+    p = o / a
+    io = conj(p) / (a * abs2(p))
+    return io
+end
 
 isreal(o::Octonion) = iszero(o.v1) & iszero(o.v2) & iszero(o.v3) & iszero(o.v4) & iszero(o.v5) & iszero(o.v6) & iszero(o.v7)
 isfinite(o::Octonion) = isfinite(real(o)) & isfinite(o.v1) & isfinite(o.v2) & isfinite(o.v3) & isfinite(o.v4) & isfinite(o.v5) & isfinite(o.v6) & isfinite(o.v7)
@@ -79,10 +96,35 @@ function (*)(o::Octonion, w::Octonion)
     return Octonion(s, v1, v2, v3, v4, v5, v6, v7)
 end
 
-(/)(o::Octonion, w::Octonion) = o * inv(w)
+function Base.:/(o::Octonion{T}, w::Octonion{T}) where T
+    # handle over/underflow while matching the behavior of /(a::Complex, b::Complex)
+    a = max(abs(real(w)), maximum(abs, imag_part(w)))
+    if isinf(w)
+        if isfinite(o)
+            return octo(
+                zero(T)*sign(o.s)*sign(w.s),
+                -zero(T)*sign(o.v1)*sign(w.v1),
+                -zero(T)*sign(o.v2)*sign(w.v2),
+                -zero(T)*sign(o.v3)*sign(w.v3),
+                -zero(T)*sign(o.v4)*sign(w.v4),
+                -zero(T)*sign(o.v5)*sign(w.v5),
+                -zero(T)*sign(o.v6)*sign(w.v6),
+                -zero(T)*sign(o.v7)*sign(w.v7),
+            )
+        end
+        return octo(T(NaN), T(NaN), T(NaN), T(NaN), T(NaN), T(NaN), T(NaN), T(NaN))
+    end
+    p = w / a
+    return (o * conj(p)) / RealDot.realdot(w, p)
+end
 
 (==)(q::Octonion, w::Octonion) = (q.s == w.s) & (q.v1 == w.v1) & (q.v2 == w.v2) & (q.v3 == w.v3) &
                                  (q.v4 == w.v4) & (q.v5 == w.v5) & (q.v6 == w.v6) & (q.v7 == w.v7)
+function Base.isequal(q::Octonion, w::Octonion)
+    return (isequal(q.s, w.s) & isequal(q.v1, w.v1) & isequal(q.v2, w.v2) &
+            isequal(q.v3, w.v3) & isequal(q.v4, w.v4) & isequal(q.v5, w.v5) &
+            isequal(q.v6, w.v6) & isequal(q.v7, w.v7))
+end
 
 function exp(o::Octonion)
   s = o.s
