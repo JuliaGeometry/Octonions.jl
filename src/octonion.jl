@@ -35,9 +35,9 @@ imag_part(o::Octonion) = (o.v1, o.v2, o.v3, o.v4, o.v5, o.v6, o.v7)
 (*)(x::Real, o::Octonion) = o * x
 
 conj(o::Octonion) = Octonion(o.s, -o.v1, -o.v2, -o.v3, -o.v4, -o.v5, -o.v6, -o.v7)
-abs(o::Octonion) = hypot(o.s, o.v1, o.v2, o.v3, o.v4, o.v5, o.v6, o.v7)
+abs(o::Octonion) = _hypot((o.s, o.v1, o.v2, o.v3, o.v4, o.v5, o.v6, o.v7))
 float(q::Octonion{T}) where T = convert(Octonion{float(T)}, q)
-abs_imag(o::Octonion) = hypot(o.v1, o.v2, o.v3, o.v4, o.v5, o.v6, o.v7)
+abs_imag(o::Octonion) = _hypot((o.v1, o.v2, o.v3, o.v4, o.v5, o.v6, o.v7))
 abs2(o::Octonion) = RealDot.realdot(o, o)
 function inv(o::Octonion)
     if isinf(o)
@@ -195,4 +195,18 @@ end
 function RealDot.realdot(o::Octonion, w::Octonion)
     return ((o.s * w.s + o.v4 * w.v4) + (o.v2 * w.v2 + o.v6 * w.v6)) +
            ((o.v1 * w.v1 + o.v5 * w.v5) + (o.v3 * w.v3 + o.v7 * w.v7))
+end
+
+# copied from https://github.com/JuliaLang/julia/blob/v1.9.0-beta3/base/math.jl
+# to work around 3+arg hypot being slow on <v1.9
+# https://github.com/JuliaLang/julia/issues/44336
+function _hypot(x::NTuple{N,<:Number}) where {N}
+    maxabs = maximum(abs, x)
+    if isnan(maxabs) && any(isinf, x)
+        return typeof(maxabs)(Inf)
+    elseif (iszero(maxabs) || isinf(maxabs))
+        return maxabs
+    else
+        return maxabs * sqrt(sum(y -> abs2(y / maxabs), x))
+    end
 end
