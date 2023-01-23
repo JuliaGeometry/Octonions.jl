@@ -1,6 +1,6 @@
 name = "Octonions"
 uuid = "d00ba074-1e29-4f5e-9fd4-d67071d6a14d"
-version = "0.2.0"
+version = "0.2.1"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
