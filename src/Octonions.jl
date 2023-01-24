@@ -1,6 +1,7 @@
 module Octonions
 
 using Random
+using RealDot: RealDot
 
 Base.@irrational INV_SQRT_EIGHT 0.3535533905932737622004 sqrt(big(0.125))
 
