@@ -164,22 +164,8 @@ function extend_analytic(f, o::Octonion)
     return octo(wr, wi_octo...)
 end
 
-function Base.exp(o::Octonion)
-  s = o.s
-  se = exp(s)
-  scale = se
-  th = abs_imag(o)
-  if th > 0
-    scale *= sin(th) / th
-  end
-  Octonion(se * cos(th),
-            scale * o.v1,
-            scale * o.v2,
-            scale * o.v3,
-            scale * o.v4,
-            scale * o.v5,
-            scale * o.v6,
-            scale * o.v7)
+for f in (:sqrt, :exp)
+    @eval Base.$f(o::Octonion) = extend_analytic($f, o)
 end
 
 function Base.log(o::Octonion)
@@ -205,10 +191,6 @@ function Base.log(o::Octonion)
 end
 
 Base.:^(o::Octonion, w::Octonion) = exp(w * log(o))
-
-function Base.sqrt(o::Octonion)
-  exp(0.5 * log(o))
-end
 
 octorand(rng::AbstractRNG = Random.GLOBAL_RNG) = octo(randn(rng), randn(rng), randn(rng), randn(rng), randn(rng), randn(rng), randn(rng), randn(rng))
 
