@@ -164,8 +164,30 @@ function extend_analytic(f, o::Octonion)
     return octo(wr, wi_octo...)
 end
 
-for f in (:sqrt, :exp)
+for f in (:sqrt, :exp, :exp2, :exp10, :expm1, :log2, :log10, :log1p,
+    :sin, :cos, :tan, :asin, :acos, :atan, :sinh, :cosh, :tanh, :asinh, :acosh, :atanh,
+    :csc, :sec, :cot, :acsc, :asec, :acot, :csch, :sech, :coth, :acsch, :asech, :acoth,
+    :sinpi, :cospi,
+)
     @eval Base.$f(o::Octonion) = extend_analytic($f, o)
+end
+
+for f in (@static(VERSION ≥ v"1.6" ? (:sincos, :sincospi) : (:sincos,)))
+    @eval begin
+        function Base.$f(o::Octonion)
+            a = abs_imag(o)
+            z = complex(o.s, a)
+            s, c = $f(z)
+            sr, si = reim(s)
+            cr, ci = reim(c)
+            sscale = si / a
+            cscale = ci / a
+            ov = imag_part(o)
+            si_octo = a > 0 ? map(x -> x * sscale, ov) : ntuple(_ -> zero(sscale), Val(7))
+            ci_octo = a > 0 ? map(x -> x * cscale, ov) : si_octo
+            return octo(sr, si_octo...), octo(cr, ci_octo...)
+        end
+    end
 end
 
 function Base.log(o::Octonion)
