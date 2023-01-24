@@ -172,7 +172,7 @@ function Base.sqrt(o::Octonion)
   exp(0.5 * log(o))
 end
 
-octorand() = octo(randn(), randn(), randn(), randn(), randn(), randn(), randn(), randn())
+octorand(rng::AbstractRNG = Random.GLOBAL_RNG) = octo(randn(rng), randn(rng), randn(rng), randn(rng), randn(rng), randn(rng), randn(rng), randn(rng))
 
 function Base.rand(rng::AbstractRNG, ::Random.SamplerType{Octonion{T}}) where {T<:Real}
   Octonion{T}(rand(rng, T), rand(rng, T), rand(rng, T), rand(rng, T),
