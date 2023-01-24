@@ -190,26 +190,17 @@ for f in (@static(VERSION ≥ v"1.6" ? (:sincos, :sincospi) : (:sincos,)))
     end
 end
 
+# ~2x faster than extend_analytic(log, o)
 function Base.log(o::Octonion)
-  a = abs(o)
-  o = o / a
-  s = o.s
-  M = abs_imag(o)
-  th = atan(M, s)
-  if M > 0
-    M = th / M
-    return Octonion(log(a),
-                     o.v1 * M,
-                     o.v2 * M,
-                     o.v3 * M,
-                     o.v4 * M,
-                     o.v5 * M,
-                     o.v6 * M,
-                     o.v7 * M)
-  else
-    z = zero(th)
-    return Octonion(log(a), ifelse(iszero(a), z, th), z, z, z, z, z, z)
-  end
+    a = abs_imag(o)
+    theta = atan(a, o.s)
+    scale = theta / a
+    if a > 0
+        return octo(log(abs(o)), map(x -> x * scale, imag_part(o))...)
+    else
+        z = zero(scale)
+        return octo(log(abs(o.s)), oftype(scale, theta), z, z, z, z, z, z)
+    end
 end
 
 Base.:^(o::Octonion, w::Octonion) = exp(w * log(o))
