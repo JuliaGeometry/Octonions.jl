@@ -126,6 +126,44 @@ function Base.isequal(q::Octonion, w::Octonion)
             isequal(q.v6, w.v6) & isequal(q.v7, w.v7))
 end
 
+"""
+    extend_analytic(f, o::Octonion)
+
+Evaluate the extension of the complex analytic function `f` to the octonions at `o`.
+
+Given ``o = s + a u``, where ``s`` is the real part, ``u`` is a pure unit octonion,
+and ``a \\ge 0`` is the magnitude of the imaginary part of ``o``,
+```math
+f(o) = \\Re(f(z)) + \\Im(f(z)) u,
+```
+is the extension of `f` to the octonions, where ``z = s + a i`` is a complex analog to
+``o``.
+
+See [^DentoniSce1973] and [^ColomboSabadini2020] for details.
+
+[^DentoniSce1973]: Dentoni, P. and Sce M. "Funzioni regolari nell'algebra di Cayley."
+                   Rendiconti del Seminario matematico della Università di Padova 50 (1973): 251-267.
+                   Translation: [^ColomboSabadini2020]
+[^ColomboSabadini2020]: Colombo, F., Sabadini, I., Struppa, D.C. (2020).
+                        Regular Functions in the Cayley Algebra.
+                        In: Michele Sce's Works in Hypercomplex Analysis.
+                        doi: [10.1007/978-3-030-50216-4_6](https://doi.org/10.1007/978-3-030-50216-4_6)
+"""
+function extend_analytic(f, o::Octonion)
+    # Adapted from Quaternions.jl
+    a = abs_imag(o)
+    s = o.s
+    z = complex(s, a)
+    w = f(z)
+    wr, wi = reim(w)
+    scale = wi / a
+    # o == real(o), so f(real(o)) may be real or complex, i.e. wi may be nonzero.
+    # we choose to embed complex numbers in the octonions by identifying the first
+    # imaginary octonion basis with the complex imaginary basis.
+    wi_octo = a > 0 ? map(x -> x * scale, imag_part(o)) : ntuple(_ -> zero(scale), Val(7))
+    return octo(wr, wi_octo...)
+end
+
 function Base.exp(o::Octonion)
   s = o.s
   se = exp(s)
