@@ -180,15 +180,16 @@ function Base.rand(rng::AbstractRNG, ::Random.SamplerType{Octonion{T}}) where {T
 end
 
 function Base.randn(rng::AbstractRNG, ::Type{Octonion{T}}) where {T<:AbstractFloat}
+  scale = inv(sqrt(T(8)))
   Octonion{T}(
-      randn(rng, T) * INV_SQRT_EIGHT,
-      randn(rng, T) * INV_SQRT_EIGHT,
-      randn(rng, T) * INV_SQRT_EIGHT,
-      randn(rng, T) * INV_SQRT_EIGHT,
-      randn(rng, T) * INV_SQRT_EIGHT,
-      randn(rng, T) * INV_SQRT_EIGHT,
-      randn(rng, T) * INV_SQRT_EIGHT,
-      randn(rng, T) * INV_SQRT_EIGHT,
+      randn(rng, T) * scale,
+      randn(rng, T) * scale,
+      randn(rng, T) * scale,
+      randn(rng, T) * scale,
+      randn(rng, T) * scale,
+      randn(rng, T) * scale,
+      randn(rng, T) * scale,
+      randn(rng, T) * scale,
   )
 end
 
