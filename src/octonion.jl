@@ -126,51 +126,84 @@ function Base.isequal(q::Octonion, w::Octonion)
             isequal(q.v6, w.v6) & isequal(q.v7, w.v7))
 end
 
-function Base.exp(o::Octonion)
-  s = o.s
-  se = exp(s)
-  scale = se
-  th = abs_imag(o)
-  if th > 0
-    scale *= sin(th) / th
-  end
-  Octonion(se * cos(th),
-            scale * o.v1,
-            scale * o.v2,
-            scale * o.v3,
-            scale * o.v4,
-            scale * o.v5,
-            scale * o.v6,
-            scale * o.v7)
+"""
+    extend_analytic(f, o::Octonion)
+
+Evaluate the extension of the complex analytic function `f` to the octonions at `o`.
+
+Given ``o = s + a u``, where ``s`` is the real part, ``u`` is a pure unit octonion,
+and ``a \\ge 0`` is the magnitude of the imaginary part of ``o``,
+```math
+f(o) = \\Re(f(z)) + \\Im(f(z)) u,
+```
+is the extension of `f` to the octonions, where ``z = s + a i`` is a complex analog to
+``o``.
+
+See [^DentoniSce1973] and [^ColomboSabadini2020] for details.
+
+[^DentoniSce1973]: Dentoni, P. and Sce M. "Funzioni regolari nell'algebra di Cayley."
+                   Rendiconti del Seminario matematico della Università di Padova 50 (1973): 251-267.
+                   Translation: [^ColomboSabadini2020]
+[^ColomboSabadini2020]: Colombo, F., Sabadini, I., Struppa, D.C. (2020).
+                        Regular Functions in the Cayley Algebra.
+                        In: Michele Sce's Works in Hypercomplex Analysis.
+                        doi: [10.1007/978-3-030-50216-4_6](https://doi.org/10.1007/978-3-030-50216-4_6)
+"""
+function extend_analytic(f, o::Octonion)
+    # Adapted from Quaternions.jl
+    a = abs_imag(o)
+    s = o.s
+    z = complex(s, a)
+    w = f(z)
+    wr, wi = reim(w)
+    scale = wi / a
+    # o == real(o), so f(real(o)) may be real or complex, i.e. wi may be nonzero.
+    # we choose to embed complex numbers in the octonions by identifying the first
+    # imaginary octonion basis with the complex imaginary basis.
+    wi_octo = a > 0 ? map(x -> x * scale, imag_part(o)) : ntuple(_ -> zero(scale), Val(7))
+    return octo(wr, wi_octo...)
 end
 
+for f in (:sqrt, :exp, :exp2, :exp10, :expm1, :log2, :log10, :log1p,
+    :sin, :cos, :tan, :asin, :acos, :atan, :sinh, :cosh, :tanh, :asinh, :acosh, :atanh,
+    :csc, :sec, :cot, :acsc, :asec, :acot, :csch, :sech, :coth, :acsch, :asech, :acoth,
+    :sinpi, :cospi,
+)
+    @eval Base.$f(o::Octonion) = extend_analytic($f, o)
+end
+
+for f in (@static(VERSION ≥ v"1.6" ? (:sincos, :sincospi) : (:sincos,)))
+    @eval begin
+        function Base.$f(o::Octonion)
+            a = abs_imag(o)
+            z = complex(o.s, a)
+            s, c = $f(z)
+            sr, si = reim(s)
+            cr, ci = reim(c)
+            sscale = si / a
+            cscale = ci / a
+            ov = imag_part(o)
+            si_octo = a > 0 ? map(x -> x * sscale, ov) : ntuple(_ -> zero(sscale), Val(7))
+            ci_octo = a > 0 ? map(x -> x * cscale, ov) : si_octo
+            return octo(sr, si_octo...), octo(cr, ci_octo...)
+        end
+    end
+end
+
+# ~2x faster than extend_analytic(log, o)
 function Base.log(o::Octonion)
-  a = abs(o)
-  o = o / a
-  s = o.s
-  M = abs_imag(o)
-  th = atan(M, s)
-  if M > 0
-    M = th / M
-    return Octonion(log(a),
-                     o.v1 * M,
-                     o.v2 * M,
-                     o.v3 * M,
-                     o.v4 * M,
-                     o.v5 * M,
-                     o.v6 * M,
-                     o.v7 * M)
-  else
-    z = zero(th)
-    return Octonion(log(a), ifelse(iszero(a), z, th), z, z, z, z, z, z)
-  end
+    a = abs_imag(o)
+    theta = atan(a, o.s)
+    scale = theta / a
+    if a > 0
+        return octo(log(abs(o)), map(x -> x * scale, imag_part(o))...)
+    else
+        z = zero(scale)
+        return octo(log(abs(o.s)), oftype(scale, theta), z, z, z, z, z, z)
+    end
 end
 
 Base.:^(o::Octonion, w::Octonion) = exp(w * log(o))
-
-function Base.sqrt(o::Octonion)
-  exp(0.5 * log(o))
-end
 
 Base.@deprecate octorand(rng::AbstractRNG=Random.GLOBAL_RNG) randn(rng, OctonionF64)*sqrt(8)
 

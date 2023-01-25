@@ -492,7 +492,15 @@ end
     end
 
     @testset "analytic functions" begin
-        unary_funs = [sqrt, inv, exp, log]
+        # all complex analytic functions can be extended to the octonions
+        #! format: off
+        unary_funs = [
+            sqrt, inv, exp, exp2, exp10, expm1, log, log2, log10, log1p,
+            sin, cos, tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh,
+            csc, sec, cot, acsc, asec, acot, csch, sech, coth, acsch, asech, acoth,
+            sinpi, cospi,
+        ]
+        #! format: on
         # since every octonion is conjugate to a quaternion,
         # one can establish correctness as follows:
         @testset for fun in unary_funs
@@ -513,8 +521,71 @@ end
                 @test exp(log(o)) ≈ o
                 @test exp(zero(o)) === one(o)
                 @test log(one(o)) === zero(o)
+                @test exp2(log2(o)) ≈ o
+                @test exp10(log10(o)) ≈ o
+                @test expm1(log1p(o)) ≈ o
+                @test sinpi(o) ≈ sin(π * o)
+                @test cospi(o) ≈ cos(π * o)
+                @test all(sincos(o) .≈ (sin(o), cos(o)))
+                @test all(sincos(zero(o)) .≈ (sin(zero(o)), cos(zero(o))))
+                if VERSION ≥ v"1.6"
+                    @test all(sincospi(o) .≈ (sinpi(o), cospi(o)))
+                    @test all(sincospi(zero(o)) .≈ (sinpi(zero(o)), cospi(zero(o))))
+                end
+                @test tan(o) ≈ cos(o) \ sin(o) ≈ sin(o) / cos(o)
+                @test tanh(o) ≈ cosh(o) \ sinh(o) ≈ sinh(o) / cosh(o)
+                @testset for (f, finv) in [
+                    (sin, csc),
+                    (cos, sec),
+                    (tan, cot),
+                    (sinh, csch),
+                    (cosh, sech),
+                    (tanh, coth),
+                ]
+                    @test f(o) ≈ inv(finv(o))
+                end
+                @testset for (f, finv) in [
+                    (asin, acsc),
+                    (acos, asec),
+                    (atan, acot),
+                    (asinh, acsch),
+                    (acosh, asech),
+                    (atanh, acoth),
+                ]
+                    @test f(o) ≈ finv(inv(o))
+                end
             end
-            @test log(zero(OctonionF64)) === octo(-Inf)
+        end
+
+        @testset "additional properties" begin
+            @testset "log" begin
+                @test log(zero(OctonionF64)) === octo(-Inf)
+                @test log(one(OctonionF64)) === octo(0.0)
+                @test log(-one(OctonionF64)) ≈ _octo(log(complex(-1.0)))
+                x = rand()
+                @test log(octo(x)) ≈ octo(log(x))
+                @test log(octo(-x)) ≈ _octo(log(complex(-x)))
+            end
+
+            @testset "exp" begin
+                @test exp(octo(0)) === octo(1.0)
+                @test exp(octo(2)) === octo(exp(2))
+                @test norm(exp(octo(0))) ≈ 1
+                @test norm(exp(octo(2))) ≠ 1
+                @test exp(octo(0.0)) === octo(1.0)
+                for i in 2:8
+                    z = setindex!(zeros(8), 2, i)
+                    z2 = setindex!(zeros(8), sin(2), i)
+                    @test exp(octo(z...)) === octo(cos(2), z2[2:end]...)
+                    @test norm(exp(octo(z...))) ≈ 1
+                    @test exp(octo(2.0)) === octo(exp(2))
+                end
+                @test exp(octo(0)) isa OctonionF64
+                @test exp(octo(0.0)) isa OctonionF64
+                @test exp(octo(0//1)) isa OctonionF64
+                @test exp(octo(BigFloat(0))) isa Octonion{BigFloat}
+                @test exp(octo(fill(1, 8)...)) ≈ exp(octo(fill(1.0, 8)...))
+            end
         end
     end
 
