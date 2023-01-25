@@ -205,7 +205,7 @@ end
 
 Base.:^(o::Octonion, w::Octonion) = exp(w * log(o))
 
-octorand(rng::AbstractRNG = Random.GLOBAL_RNG) = octo(randn(rng), randn(rng), randn(rng), randn(rng), randn(rng), randn(rng), randn(rng), randn(rng))
+Base.@deprecate octorand(rng::AbstractRNG=Random.GLOBAL_RNG) randn(rng, OctonionF64)*sqrt(8)
 
 function Base.rand(rng::AbstractRNG, ::Random.SamplerType{Octonion{T}}) where {T<:Real}
   Octonion{T}(rand(rng, T), rand(rng, T), rand(rng, T), rand(rng, T),
@@ -213,15 +213,16 @@ function Base.rand(rng::AbstractRNG, ::Random.SamplerType{Octonion{T}}) where {T
 end
 
 function Base.randn(rng::AbstractRNG, ::Type{Octonion{T}}) where {T<:AbstractFloat}
+  scale = inv(sqrt(T(8)))
   Octonion{T}(
-      randn(rng, T) * INV_SQRT_EIGHT,
-      randn(rng, T) * INV_SQRT_EIGHT,
-      randn(rng, T) * INV_SQRT_EIGHT,
-      randn(rng, T) * INV_SQRT_EIGHT,
-      randn(rng, T) * INV_SQRT_EIGHT,
-      randn(rng, T) * INV_SQRT_EIGHT,
-      randn(rng, T) * INV_SQRT_EIGHT,
-      randn(rng, T) * INV_SQRT_EIGHT,
+      randn(rng, T) * scale,
+      randn(rng, T) * scale,
+      randn(rng, T) * scale,
+      randn(rng, T) * scale,
+      randn(rng, T) * scale,
+      randn(rng, T) * scale,
+      randn(rng, T) * scale,
+      randn(rng, T) * scale,
   )
 end
 

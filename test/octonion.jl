@@ -97,6 +97,7 @@ end
 
     @testset "random generation" begin
         @testset "octorand" begin
+            @test_deprecated octorand()
             o = octorand()
             @test o isa Octonion
         end
