@@ -8,13 +8,15 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 RealDot = "c1ae055f-0cd5-4b69-90a6-9a35b1a98df9"
 
 [compat]
+Aqua = "0.6"
 Quaternions = "0.7"
 RealDot = "0.1"
 julia = "1"
 
 [extras]
+Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 Quaternions = "94ee1d12-ae83-5a48-8b1c-48b8ff168ae0"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Quaternions", "Test"]
+test = ["Quaternions", "Test", "Aqua"]
